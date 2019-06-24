@@ -12,12 +12,7 @@ defmodule Scraper do
     |> request()
     |> parse()
     |> Enum.map(fn {k, links} ->
-      full_links =
-        links
-        |> Enum.map(&URI.merge(url, &1))
-        |> Enum.map(&URI.to_string/1)
-
-      {k, full_links}
+      {k, paths_to_full_url(links, url)}
     end)
     |> Enum.into(%{})
   end
@@ -40,5 +35,15 @@ defmodule Scraper do
       |> Floki.attribute("href")
 
     [assets: assets, links: links]
+  end
+
+  defp paths_to_full_url(paths, url) do
+    paths
+    |> Enum.filter(fn
+      "javascript:" <> _script -> false
+      _link -> true
+    end)
+    |> Enum.map(&URI.merge("#{url}/", &1))
+    |> Enum.map(&URI.to_string/1)
   end
 end

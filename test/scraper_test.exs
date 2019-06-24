@@ -48,6 +48,17 @@ defmodule ScraperTest do
     assert assets == Enum.map(img_srcs, fn src -> "#{url}/#{src}" end)
   end
 
+  test "fetch/1 handles anchors and js-links properly", %{bypass: bypass} do
+    url = endpoint_url(bypass.port)
+    a_hrefs = ["#{url}/a1", "#a2", "javascript:a3()"]
+
+    body = generate_simple_body([], a_hrefs)
+    use_bypass(bypass, body)
+
+    assert %{assets: [], links: links} = Scraper.fetch(url)
+    assert links == ["#{url}/a1", "#{url}/#a2"]
+  end
+
   defp generate_simple_body(img_srcs, a_hrefs) do
     body =
       Enum.reduce(img_srcs, "", fn src, body ->
