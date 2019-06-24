@@ -11,6 +11,15 @@ defmodule Scraper do
     url
     |> request()
     |> parse()
+    |> Enum.map(fn {k, links} ->
+      full_links =
+        links
+        |> Enum.map(&URI.merge(url, &1))
+        |> Enum.map(&URI.to_string/1)
+
+      {k, full_links}
+    end)
+    |> Enum.into(%{})
   end
 
   defp request(url) do
@@ -30,6 +39,6 @@ defmodule Scraper do
       |> Floki.find("a")
       |> Floki.attribute("href")
 
-    %{assets: assets, links: links}
+    [assets: assets, links: links]
   end
 end

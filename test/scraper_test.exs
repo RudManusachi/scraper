@@ -24,18 +24,31 @@ defmodule ScraperTest do
        %{bypass: bypass} do
     url = endpoint_url(bypass.port)
 
-    img_srcs = [
-      "#{url}/img1",
-      "#{url}/img2",
-      "#{url}/img3"
-    ]
+    img_srcs = ["#{url}/img1", "#{url}/img2", "#{url}/img3"]
+    a_hrefs = ["#{url}/a1", "#{url}/a2", "#{url}/a3"]
 
-    a_hrefs = [
-      "#{url}/a1",
-      "#{url}/a2",
-      "#{url}/a3"
-    ]
+    body = generate_simple_body(img_srcs, a_hrefs)
+    use_bypass(bypass, body)
 
+    assert %{assets: assets, links: links} = Scraper.fetch(url)
+    assert links == a_hrefs
+    assert assets == img_srcs
+  end
+
+  test "fetch/1 returns full url despite the urls in file", %{bypass: bypass} do
+    img_srcs = ["img1", "img2", "img3"]
+    a_hrefs = ["a1", "a2", "a3"]
+
+    body = generate_simple_body(img_srcs, a_hrefs)
+    use_bypass(bypass, body)
+
+    url = endpoint_url(bypass.port)
+    assert %{assets: assets, links: links} = Scraper.fetch(url)
+    assert links == Enum.map(a_hrefs, fn href -> "#{url}/#{href}" end)
+    assert assets == Enum.map(img_srcs, fn src -> "#{url}/#{src}" end)
+  end
+
+  defp generate_simple_body(img_srcs, a_hrefs) do
     body =
       Enum.reduce(img_srcs, "", fn src, body ->
         body <> "<img src=\"#{src}\" \/>"
@@ -46,17 +59,11 @@ defmodule ScraperTest do
         body <> "<a href=\"#{href}\">Link</a>"
       end)
 
-    body = """
+    """
     <div>
       #{body}
     </div>
     """
-
-    use_bypass(bypass, body)
-
-    assert %{assets: assets, links: links} = Scraper.fetch(endpoint_url(bypass.port))
-    assert links == a_hrefs
-    assert assets == img_srcs
   end
 
   defp endpoint_url(port), do: "http://localhost:#{port}"
