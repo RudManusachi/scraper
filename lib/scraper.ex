@@ -1,9 +1,9 @@
 defmodule Scraper do
-  require Logger
-
   @moduledoc """
   Documentation for Scraper.
   """
+
+  alias Scraper.HTTP
 
   @doc """
   Fetch page assets and links
@@ -16,7 +16,7 @@ defmodule Scraper do
   end
 
   def fetch(url) do
-    with {:ok, body} <- request(url) do
+    with {:ok, body} <- HTTP.request(url) do
       data_links = parse(body)
 
       result =
@@ -27,28 +27,6 @@ defmodule Scraper do
       {:ok, result}
     else
       error -> error
-    end
-  end
-
-  @max_retry_time 4
-  @base_sleep_time 100
-  @recv_timeout Application.get_env(:scraper, :request_timeout)
-
-  defp request(url, retry_time \\ @max_retry_time, sleep_time \\ @base_sleep_time, err \\ nil)
-
-  defp request(_url, retry_time, _sleep_time, err) when retry_time < 1 do
-    {:error, err}
-  end
-
-  defp request(url, retry_time, sleep_time, _err) do
-    with {:ok, %HTTPoison.Response{body: body}} <-
-           HTTPoison.get(url, [], recv_timeout: @recv_timeout) do
-      {:ok, body}
-    else
-      {:error, reason} ->
-        Logger.warn("Request error #{url} \n #{inspect(reason)}")
-        :timer.sleep((@max_retry_time - retry_time + 1) * @base_sleep_time)
-        request(url, retry_time - 1, sleep_time, reason)
     end
   end
 

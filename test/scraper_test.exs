@@ -1,5 +1,6 @@
 defmodule ScraperTest do
   use ExUnit.Case, async: true
+  import ExUnit.CaptureLog
   doctest Scraper
 
   setup do
@@ -64,7 +65,10 @@ defmodule ScraperTest do
 
     url = endpoint_url(bypass.port)
     Bypass.down(bypass)
-    assert {:error, %{reason: :econnrefused}} = Scraper.fetch(url)
+
+    assert capture_log(fn ->
+             assert {:error, %{reason: :econnrefused}} = Scraper.fetch(url)
+           end) =~ "Request error"
 
     Bypass.up(bypass)
     assert %{assets: [], links: []} = Scraper.fetch!(url)
@@ -85,7 +89,7 @@ defmodule ScraperTest do
       Plug.Conn.resp(conn, 200, "")
     end)
 
-    assert %{assets: [], links: []} = Scraper.fetch!(endpoint_url(bypass.port))
+    assert capture_log(fn -> Scraper.fetch!(endpoint_url(bypass.port)) end) =~ ":timeout"
   end
 
   defp generate_simple_body(img_srcs, a_hrefs) do
