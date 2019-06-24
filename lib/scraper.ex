@@ -4,15 +4,20 @@ defmodule Scraper do
   """
 
   @doc """
-  Hello world.
-
-  ## Examples
-
-      iex> Scraper.hello()
-      :world
-
+  Fetch page assets and links
   """
-  def hello do
-    :world
+
+  def fetch(url) do
+    url
+    |> request()
+    |> parse()
+  end
+
+  defp request(url) do
+    ""
+  end
+
+  defp parse(html) do
+    %{assets: [], links: []}
   end
 end
