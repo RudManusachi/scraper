@@ -70,6 +70,24 @@ defmodule ScraperTest do
     assert %{assets: [], links: []} = Scraper.fetch!(url)
   end
 
+  test "fetch/1 retries connect", %{bypass: bypass} do
+    Agent.start_link(fn -> 600 end, name: :throttle)
+
+    Bypass.expect(bypass, fn conn ->
+      timeout = Agent.get_and_update(:throttle, fn timeout -> {timeout, timeout - 200} end)
+
+      :timer.sleep(timeout)
+
+      # clean any expectation of bypassed requests completing
+      # https://github.com/PSPDFKit-labs/bypass/issues/75#issuecomment-466533334
+      Bypass.pass(bypass)
+
+      Plug.Conn.resp(conn, 200, "")
+    end)
+
+    assert %{assets: [], links: []} = Scraper.fetch!(endpoint_url(bypass.port))
+  end
+
   defp generate_simple_body(img_srcs, a_hrefs) do
     body =
       Enum.reduce(img_srcs, "", fn src, body ->
