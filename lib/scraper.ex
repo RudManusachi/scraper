@@ -8,18 +8,19 @@ defmodule Scraper do
   """
 
   def fetch(url) do
-    url
-    |> request()
-    |> parse()
-    |> Enum.map(fn {k, links} ->
-      {k, paths_to_full_url(links, url)}
-    end)
-    |> Enum.into(%{})
+    with {:ok, body} <- request(url),
+         data_links <- parse(body) do
+      for {k, paths} <- data_links, into: %{} do
+        {k, paths_to_full_url(paths, url)}
+      end
+    end
   end
 
   defp request(url) do
-    with %HTTPoison.Response{body: body} <- HTTPoison.get!(url) do
-      body
+    with {:ok, %HTTPoison.Response{body: body}} <- HTTPoison.get(url) do
+      {:ok, body}
+    else
+      error -> error
     end
   end
 

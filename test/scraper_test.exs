@@ -59,6 +59,17 @@ defmodule ScraperTest do
     assert links == ["#{url}/a1", "#{url}/#a2"]
   end
 
+  test "fetch/1 raises error when cannot connect", %{bypass: bypass} do
+    use_bypass(bypass, "")
+
+    url = endpoint_url(bypass.port)
+    Bypass.down(bypass)
+    assert {:error, %{reason: :econnrefused}} = Scraper.fetch(url)
+
+    Bypass.up(bypass)
+    assert %{assets: [], links: []} = Scraper.fetch(url)
+  end
+
   defp generate_simple_body(img_srcs, a_hrefs) do
     body =
       Enum.reduce(img_srcs, "", fn src, body ->
