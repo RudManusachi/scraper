@@ -6,17 +6,17 @@ defmodule Scraper do
   alias Scraper.HTTP
 
   @doc """
-  Fetch page assets and links
+  Fetches page assets and links
   """
-  def fetch!(url) do
-    case fetch(url) do
+  def fetch!(url, opt \\ []) do
+    case fetch(url, opt) do
       {:ok, result} -> result
       {:error, error} -> raise error
     end
   end
 
-  def fetch(url) do
-    with {:ok, body} <- HTTP.request(url) do
+  def fetch(url, opts \\ []) do
+    with {:ok, body} <- HTTP.request(url, opts) do
       data_links = parse(body)
 
       result =

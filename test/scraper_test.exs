@@ -89,7 +89,9 @@ defmodule ScraperTest do
       Plug.Conn.resp(conn, 200, "")
     end)
 
-    assert capture_log(fn -> Scraper.fetch!(endpoint_url(bypass.port)) end) =~ ":timeout"
+    assert capture_log(fn ->
+             Scraper.fetch!(endpoint_url(bypass.port), recv_timeout: 500)
+           end) =~ ":timeout"
   end
 
   defp generate_simple_body(img_srcs, a_hrefs) do
