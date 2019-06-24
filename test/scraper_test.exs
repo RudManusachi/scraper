@@ -15,7 +15,7 @@ defmodule ScraperTest do
 
   test "fetch/1 returns %Map with lists :assets and :links", %{bypass: bypass} do
     use_bypass(bypass, "")
-    assert %{assets: assets, links: links} = Scraper.fetch(endpoint_url(bypass.port))
+    assert {:ok, %{assets: assets, links: links}} = Scraper.fetch(endpoint_url(bypass.port))
     assert is_list(assets)
     assert is_list(links)
   end
@@ -30,7 +30,7 @@ defmodule ScraperTest do
     body = generate_simple_body(img_srcs, a_hrefs)
     use_bypass(bypass, body)
 
-    assert %{assets: assets, links: links} = Scraper.fetch(url)
+    assert {:ok, %{assets: assets, links: links}} = Scraper.fetch(url)
     assert links == a_hrefs
     assert assets == img_srcs
   end
@@ -43,7 +43,7 @@ defmodule ScraperTest do
     use_bypass(bypass, body)
 
     url = endpoint_url(bypass.port)
-    assert %{assets: assets, links: links} = Scraper.fetch(url)
+    assert {:ok, %{assets: assets, links: links}} = Scraper.fetch(url)
     assert links == Enum.map(a_hrefs, fn href -> "#{url}/#{href}" end)
     assert assets == Enum.map(img_srcs, fn src -> "#{url}/#{src}" end)
   end
@@ -55,7 +55,7 @@ defmodule ScraperTest do
     body = generate_simple_body([], a_hrefs)
     use_bypass(bypass, body)
 
-    assert %{assets: [], links: links} = Scraper.fetch(url)
+    assert {:ok, %{assets: [], links: links}} = Scraper.fetch(url)
     assert links == ["#{url}/a1", "#{url}/#a2"]
   end
 
@@ -67,7 +67,7 @@ defmodule ScraperTest do
     assert {:error, %{reason: :econnrefused}} = Scraper.fetch(url)
 
     Bypass.up(bypass)
-    assert %{assets: [], links: []} = Scraper.fetch(url)
+    assert %{assets: [], links: []} = Scraper.fetch!(url)
   end
 
   defp generate_simple_body(img_srcs, a_hrefs) do

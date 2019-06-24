@@ -6,13 +6,25 @@ defmodule Scraper do
   @doc """
   Fetch page assets and links
   """
+  def fetch!(url) do
+    case fetch(url) do
+      {:ok, result} -> result
+      {:error, error} -> raise error
+    end
+  end
 
   def fetch(url) do
-    with {:ok, body} <- request(url),
-         data_links <- parse(body) do
-      for {k, paths} <- data_links, into: %{} do
-        {k, paths_to_full_url(paths, url)}
-      end
+    with {:ok, body} <- request(url) do
+      data_links = parse(body)
+
+      result =
+        for {k, paths} <- data_links, into: %{} do
+          {k, paths_to_full_url(paths, url)}
+        end
+
+      {:ok, result}
+    else
+      error -> error
     end
   end
 
